@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Card Grid</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .grid-container-outer {
+      display: flex;
+      width: 100%;
+      background-image: url("./image.png");
+      height: 100vh;
+      background-size: cover;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 3rem;
+      gap: 3rem;
+    }
+
+    .left-section {
+      color: white;
+      flex-basis: 40%;
+      max-width: 40%;
+    }
+
+    .left-section h1 {
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      margin-bottom: 1rem;
+    }
+
+    .left-section p {
+      font-size: clamp(0.875rem, 1.5vw, 1rem);
+      line-height: 1.6;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: clamp(1rem, 3vw, 2rem);
+      flex-basis: 55%;
+      max-width: 55%;
+      width: 100%;
+      height: 80vh;
+      max-height: 700px;
+    }
+
+    .scene-container {
+      position: relative;
+      perspective: 2000px;
+      width: 100%;
+      height: 100%;
+      min-height: 150px;
+    }
+
+    .card-wrapper {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+    }
+
+    .card {
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: clamp(12px, 2vw, 24px);
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-style: preserve-3d;
+      transform: translateZ(50px);
+      box-shadow: 0 60px 120px rgba(0, 0, 0, 0.3),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      transition: box-shadow 0.7s ease;
+    }
+
+    .card-face.front {
+      box-shadow: 0 60px 120px rgba(0, 0, 0, 0.3),
+        0 30px 70px rgba(139, 92, 246, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .card-face.back {
+      transform: rotateY(180deg) translateZ(50px);
+      box-shadow: 0 60px 120px rgba(0, 0, 0, 0.3),
+        0 30px 70px rgba(14, 165, 233, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .light-flare {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 5;
+    }
+
+    .light-flare::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 120px;
+      height: 250%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 25%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.1) 75%,
+        transparent 100%
+      );
+      transform: rotate(45deg) translateX(-200%);
+      animation: flareSlide 10s ease-in-out infinite;
+      filter: blur(28px);
+      mix-blend-mode: overlay;
+    }
+
+    @keyframes flareSlide {
+      0% {
+        transform: rotate(45deg) translateX(-500%);
+      }
+      50% {
+        transform: rotate(45deg) translateX(500%);
+      }
+      100% {
+        transform: rotate(45deg) translateX(-500%);
+      }
+    }
+
+    .dynamic-lighting {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+      opacity: 0.3;
+    }
+
+    .hovering .dynamic-lighting {
+      opacity: 1;
+      transition-delay: 500ms;
+    }
+
+    .glass-reflection {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+    }
+
+    .glass-reflection.front {
+      background: linear-gradient(
+        115deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        transparent 45%,
+        rgba(255, 255, 255, 0.05) 100%
+      );
+    }
+
+    .glass-reflection.back {
+      background: linear-gradient(
+        245deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        transparent 45%,
+        rgba(255, 255, 255, 0.05) 100%
+      );
+    }
+
+    .gradient-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .gradient-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      padding: clamp(0.75rem, 2vw, 1.5rem) clamp(1rem, 2.5vw, 2rem);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .card-title {
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
+      font-weight: 600;
+      color: white;
+      margin: 0;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .card-body {
+      flex: 1;
+      position: relative;
+    }
+
+    .front-faces-container,
+    .back-faces-container {
+      display: none;
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 1024px) {
+      .grid-container-outer {
+        flex-direction: column;
+        padding: 2rem;
+        gap: 2rem;
+      }
+
+      .left-section {
+        flex-basis: auto;
+        max-width: 100%;
+        text-align: center;
+      }
+
+      .grid-container {
+        flex-basis: auto;
+        max-width: 100%;
+        height: 60vh;
+        max-height: 500px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, 1fr);
+        height: 70vh;
+      }
+
+      .grid-container-outer {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid-container-outer {
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .grid-container {
+        gap: 1rem;
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="front-faces-container">
+    <div class="front-face-content" data-card="1">
+      <img src="1.png" alt="Card 1 Front" />
+      <h2>Front Card 1</h2>
+    </div>
+    <div class="front-face-content" data-card="2">
+      <img src="2.png" alt="Card 2 Front" />
+      <h2>Front Card 2</h2>
+    </div>
+    <div class="front-face-content" data-card="3">
+      <img src="3.png" alt="Card 3 Front" />
+      <h2>Front Card 3</h2>
+    </div>
+    <div class="front-face-content" data-card="4">
+      <img src="4.png" alt="Card 4 Front" />
+      <h2>Front Card 4</h2>
+    </div>
+  </div>
+
+  <div class="back-faces-container">
+    <div class="back-face-content" data-card="1">
+      <img src="2.png" alt="Card 1 Back" />
+      <h2>Back Card 1</h2>
+    </div>
+    <div class="back-face-content" data-card="2">
+      <img src="1.png" alt="Card 2 Back" />
+      <h2>Back Card 2</h2>
+    </div>
+    <div class="back-face-content" data-card="3">
+      <img src="4.png" alt="Card 3 Back" />
+      <h2>Back Card 3</h2>
+    </div>
+    <div class="back-face-content" data-card="4">
+      <img src="3.png" alt="Card 4 Back" />
+      <h2>Back Card 4</h2>
+    </div>
+  </div>
+
+  <div class="grid-container-outer">
+    <div class="left-section">
+      <h1>Adding White Light</h1>
+      <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas, fuga? Lorem ipsum, dolor sit amet consectetur adipisicing elit. Molestias, velit! Obcaecati sequi natus commodi qui. Laborum voluptatibus perspiciatis explicabo inventore?</p>
+    </div>
+    <div class="grid-container">
+      <div class="scene-container" data-card="1">
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-face front">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection front"></div>
+              <div class="gradient-bg front"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Card One</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+            <div class="card-face back">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection back"></div>
+              <div class="gradient-bg back"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Back One</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene-container" data-card="2">
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-face front">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection front"></div>
+              <div class="gradient-bg front"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Card Two</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+            <div class="card-face back">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection back"></div>
+              <div class="gradient-bg back"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Back Two</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene-container" data-card="3">
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-face front">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection front"></div>
+              <div class="gradient-bg front"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Card Three</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+            <div class="card-face back">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection back"></div>
+              <div class="gradient-bg back"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Back Three</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scene-container" data-card="4">
+        <div class="card-wrapper">
+          <div class="card">
+            <div class="card-face front">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection front"></div>
+              <div class="gradient-bg front"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Card Four</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+            <div class="card-face back">
+              <div class="light-flare"></div>
+              <div class="dynamic-lighting"></div>
+              <div class="glass-reflection back"></div>
+              <div class="gradient-bg back"></div>
+              <div class="card-content">
+                <div class="card-header">
+                  <h2 class="card-title">Back Four</h2>
+                </div>
+                <div class="card-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ 
+
+    <script>
+      // Initialize cards with content from containers
+      function initializeCards() {
+        const scenes = document.querySelectorAll(".scene-container");
+
+        scenes.forEach((scene) => {
+          const cardNum = scene.dataset.card;
+
+          // Get content from containers
+          const frontContent = document.querySelector(
+            `.front-face-content[data-card="${cardNum}"]`
+          );
+          const backContent = document.querySelector(
+            `.back-face-content[data-card="${cardNum}"]`
+          );
+
+          // Get card elements
+          const card = scene.querySelector(".card");
+          const frontFace = scene.querySelector(".card-face.front");
+          const backFace = scene.querySelector(".card-face.back");
+
+          // Populate front face
+          const frontImg = frontContent.querySelector("img").cloneNode(true);
+          const frontTitle = frontContent.querySelector("h2").textContent;
+          frontFace.querySelector(".gradient-bg").appendChild(frontImg);
+          frontFace.querySelector(".card-title").textContent = frontTitle;
+
+          // Populate back face
+          const backImg = backContent.querySelector("img").cloneNode(true);
+          const backTitle = backContent.querySelector("h2").textContent;
+          backFace.querySelector(".gradient-bg").appendChild(backImg);
+          backFace.querySelector(".card-title").textContent = backTitle;
+
+          // Add interactions
+          setupCardInteractions(scene);
+        });
+      }
+
+      function setupCardInteractions(scene) {
+        const card = scene.querySelector(".card");
+        const cardWrapper = scene.querySelector(".card-wrapper");
+        const frontLighting = scene.querySelector(
+          ".card-face.front .dynamic-lighting"
+        );
+        const backLighting = scene.querySelector(
+          ".card-face.back .dynamic-lighting"
+        );
+
+        let isFlipped = false;
+        let isTransitioning = false;
+        let mousePos = { x: 0, y: 0 };
+
+        scene.addEventListener("mousemove", (e) => {
+          if (!isTransitioning) {
+            const rect = scene.getBoundingClientRect();
+            const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+            const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+            mousePos = { x: x * 10, y: y * -10 };
+
+            updateLighting();
+            updateTilt();
+          }
+
+          function updateLighting() {
+            const frontX = 50 + mousePos.x * 3;
+            const frontY = 50 - mousePos.y * 3;
+            const backX = 50 - mousePos.x * 3;
+            const backY = 50 - mousePos.y * 3;
+
+            frontLighting.style.background = `radial-gradient(circle at ${frontX}% ${frontY}%, rgba(255,255,255,0.25), transparent 70%)`;
+            backLighting.style.background = `radial-gradient(circle at ${backX}% ${backY}%, rgba(255,255,255,0.25), transparent 70%)`;
+          }
+
+          function updateTilt() {
+            const tiltX = mousePos.y * 1.8;
+            const tiltY = mousePos.x * -1.8;
+            cardWrapper.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+          }
+        });
+
+        scene.addEventListener("mouseenter", () => {
+          isFlipped = true;
+          isTransitioning = true;
+          cardWrapper.classList.add("hovering");
+          card.classList.add("flipped");
+
+          setTimeout(() => {
+            isTransitioning = false;
+          }, 1400);
+        });
+
+        scene.addEventListener("mouseleave", () => {
+          isFlipped = false;
+          isTransitioning = true;
+          mousePos = { x: 0, y: 0 };
+          cardWrapper.classList.remove("hovering");
+          card.classList.remove("flipped");
+          cardWrapper.style.transform = "";
+
+          setTimeout(() => {
+            isTransitioning = false;
+          }, 1400);
+        });
+      }
+
+      // Initialize on load
+      initializeCards();
+    </script>
+  </body>
+</html>
